@@ -1,0 +1,66 @@
+# 버전 설정
+version: '3.8'
+
+# 컨테이너 설정
+services:
+  mongodb:
+    #사용하려는 이미지
+    image: 'mongo'
+    volumes:
+      - data:/data/db
+    environment:
+      # MONGO_INITDB_ROOT_USERNAME:max
+
+      - MONGO_INITDB_ROOT_USERNAME=max
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+
+    # env_file:
+    #   - ./env/mongo.env
+    # networks: -> 자동으로 해줌
+    #   - goals-net
+  backend:
+    # image: 'goals-node'
+    # build는 상대 경로를 활용하여 DockerFile을 찾음
+    build: ./backend
+
+    # build: 
+      #도커 파일을 보유하는 폴더의 경로를 특정함
+      # context: ./backend
+      # dockerfile: Dockerfile
+      # args:
+      #   some-arg:1
+
+    ports:
+      # 외부:내부
+      - '80:80'
+
+    volumes:
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules
+
+    env_file:
+      - ./env/backend.env
+
+    depends_on:
+      - mongodb
+    
+  frontend:
+    build: ./frontend
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./frontend/src:/app/src
+    ## --i
+    stdin_open: true
+    ## --t
+    tty: true
+    depends_on:
+      - backend
+    
+# 사용할 모든 볼륨을 인식 시켜줘야함
+# 익명과 바인드 볼륨은 여기 적어줄 필요 x
+volumes:
+  data:
+  logs:
+
